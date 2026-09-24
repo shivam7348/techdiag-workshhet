@@ -147,7 +147,7 @@ td[contenteditable=true]:focus{background:#fffbe8 !important;box-shadow:inset 0 
     <h1>RPT Worksheet Converter</h1>
     <p>Convert a <b>Patient Wise Worksheet (Details)</b> PDF into a print-ready RPT <b>Work Sheet Report</b> in A4 landscape.</p>
     <div class="rules">
-      <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Sorted by LAB No (ascending)</span>
+      <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Serial order: LAB No → Barcode (ascending)</span>
       <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>X-ray tests hidden automatically</span>
       <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Urine Routine: Sp. Gravity → Pus Cells → Protein → Epithelial Cells</span>
     </div>
@@ -345,8 +345,11 @@ function naturalCompare(a,b){
 }
 function sortRecordsAscending(rows){
   rows.sort((a,b)=>{
+    // Serial order: LAB No ascending, then Barcode ascending.
     const lab=naturalCompare(a.labNo,b.labNo);
     if(lab) return lab;
+    const bc=naturalCompare(a.barcode,b.barcode);
+    if(bc) return bc;
     const da=toDateObj(a.date), db=toDateObj(b.date);
     if(da && db && da-db) return da-db;
     return naturalCompare(a.patient,b.patient) || naturalCompare(a.test,b.test);
@@ -375,7 +378,7 @@ function renderPreview(){
   $('downloadPdf').disabled=!r.length; $('downloadCsv').disabled=!r.length;
   if(!r.length){$('preview').className='preview-empty';$('preview').innerHTML='Upload a worksheet PDF to see the extracted rows.';return}
   $('preview').className='table-wrap';
-  $('preview').innerHTML='<table><thead><tr><th>#</th><th>Date</th><th>LAB No</th><th>Patient Name</th><th>Age</th><th>Sex</th><th>Test Name</th><th>RPT Parameters</th><th>Barcode</th></tr></thead><tbody>'+r.map((x,i)=>`<tr><td>${i+1}</td>${cell(i,'date',x.date)}${cell(i,'labNo',x.labNo)}${cell(i,'patient',x.patient)}${cell(i,'age',x.age)}${cell(i,'sex',x.sex)}${cell(i,'test',x.test)}<td>${esc(urineRoutineParameterText(x.test))}</td>${cell(i,'barcode',x.barcode)}</tr>`).join('')+'</tbody></table>';
+  $('preview').innerHTML='<table><thead><tr><th>Sr. No</th><th>Date</th><th>LAB No</th><th>Barcode</th><th>Patient Name</th><th>Age</th><th>Sex</th><th>Test Name</th><th>RPT Parameters</th></tr></thead><tbody>'+r.map((x,i)=>`<tr><td>${i+1}</td>${cell(i,'date',x.date)}${cell(i,'labNo',x.labNo)}${cell(i,'barcode',x.barcode)}${cell(i,'patient',x.patient)}${cell(i,'age',x.age)}${cell(i,'sex',x.sex)}${cell(i,'test',x.test)}<td>${esc(urineRoutineParameterText(x.test))}</td></tr>`).join('')+'</tbody></table>';
   $('preview').querySelectorAll('[contenteditable]').forEach(td=>td.addEventListener('input',()=>{
     const i=+td.dataset.i,k=td.dataset.k,v=td.innerText.trim(); state.records[i][k]=v;
   }));
@@ -388,7 +391,7 @@ function fmtShort(s){const d=toDateObj(s);return d?`${d.getDate()}-${mon[d.getMo
 function fmtLong(s){const d=toDateObj(s);return d?`${String(d.getDate()).padStart(2,'0')}-${mon[d.getMonth()]}-${d.getFullYear()}`:s}
 function groupPatients(rows){
   const out=[],map=new Map();
-  rows.forEach((r,idx)=>{const key=[r.date,r.labNo,r.patient].join('|');let g=map.get(key);if(!g){g={date:r.date,labNo:r.labNo,patient:r.patient,tests:[],first:idx};map.set(key,g);out.push(g)}g.tests.push({name:r.test})});
+  rows.forEach((r,idx)=>{const key=[r.date,r.labNo,r.patient].join('|');let g=map.get(key);if(!g){g={date:r.date,labNo:r.labNo,patient:r.patient,tests:[],first:idx};map.set(key,g);out.push(g)}g.tests.push({name:r.test,barcode:r.barcode})});
   return out;
 }
 function split(doc,text,max){return doc.splitTextToSize(String(text||''),max)}
@@ -398,11 +401,13 @@ function calcDateRange(rows){const ds=rows.map(r=>toDateObj(r.date)).filter(Bool
 $('downloadPdf').addEventListener('click',()=>{
   state.records=filterHiddenTests(state.records); if(!state.records.length){renderPreview();showStatus('No visible rows to export. X-ray tests are hidden automatically.','warn');return;} sortRecordsAscending(state.records); renderPreview(); if(!window.jspdf){showStatus('PDF generator could not load. Please connect to the internet and reopen the converter.','err');return}
   const {jsPDF}=window.jspdf; const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'a4'}); const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
-  const left=20,right=W-20,bottom=28; const col={date:left+10,lab:left+70,patient:left+145,test:left+315,params:left+445}; const width={patient:155,test:122,params:right-(left+445)}; const range=calcDateRange(state.records); const groups=groupPatients(state.records); let pageNo=1,y=0;
+  const left=20,right=W-20,bottom=28; const col={sr:left+4,date:left+32,lab:left+82,barcode:left+150,patient:left+222,test:left+382,params:left+512}; const width={patient:152,test:122,params:right-(left+512)}; const range=calcDateRange(state.records); const groups=groupPatients(state.records); let pageNo=1,y=0;
   function header(first){doc.setLineWidth(1.1);doc.rect(left,14,right-left,42);doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Work Sheet Report',W/2,31,{align:'center'});doc.setFontSize(9);doc.text(`From :- ${range.from} To :- ${range.to}`,W/2,45,{align:'center'});if(first){doc.setFontSize(7.5);doc.text(($('section').value||'').trim(),left+2,78);return 92}return 72}
   function addPage(){doc.addPage('a4','landscape');pageNo++;y=header(false)}
   y=header(true);
+  let sr=0;
   for(const g of groups){
+    sr++;
     const patientLines=split(doc,g.patient,width.patient);
     const testRows=g.tests.map(t=>({
       testLines:split(doc,t.name,width.test),
@@ -411,17 +416,19 @@ $('downloadPdf').addEventListener('click',()=>{
     const testContentLines=Math.max(1,testRows.reduce((sum,row)=>sum+Math.max(1,row.testLines.length,row.paramLines.length),0));
     const n=Math.max(1,patientLines.length,testContentLines);const blockH=40+(n-1)*8;
     if(y+blockH>H-bottom-12)addPage();
-    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text('Date',col.date,y);doc.text('LAB No',col.lab,y);doc.text('Patient Name',col.patient,y);doc.text('Test Name',col.test,y);y+=14;
+    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text('Sr.',col.sr,y);doc.text('Date',col.date,y);doc.text('LAB No',col.lab,y);doc.text('Barcode',col.barcode,y);doc.text('Patient Name',col.patient,y);doc.text('Test Name',col.test,y);y+=14;
     const hd=getHeading(g);if(hd){doc.setFontSize(6.8);doc.text(hd,left+2,y);y+=13}
-    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.text(fmtShort(g.date),col.date,y);doc.text(g.labNo,col.lab,y);
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.text(String(sr),col.sr,y);doc.text(fmtShort(g.date),col.date,y);doc.text(g.labNo,col.lab,y);
     doc.setFont('helvetica','bold');patientLines.forEach((ln,i)=>doc.text(ln,col.patient,y+i*8));
     doc.setFont('helvetica','normal');
     let ty=y;
-    for(const row of testRows){
+    let lastBarcode=null;
+    testRows.forEach((row,ri)=>{
+      const bc=g.tests[ri].barcode||''; if(bc!==lastBarcode){doc.text(bc,col.barcode,ty);lastBarcode=bc}
       row.testLines.forEach((ln,i)=>doc.text(ln,col.test,ty+i*8));
       if(row.paramLines.length){doc.setFontSize(6.1);row.paramLines.forEach((ln,i)=>doc.text(ln,col.params,ty+i*8));doc.setFontSize(7)}
       ty+=Math.max(1,row.testLines.length,row.paramLines.length)*8;
-    }
+    });
     y+=Math.max(1,n)*8+8;doc.setLineDashPattern([2,2],0);doc.line(left,y,right,y);doc.setLineDashPattern([],0);y+=13;
   }
   const pages=doc.internal.getNumberOfPages();for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.text(`Page ${i} of ${pages}`,W/2,H-10,{align:'center'})}
@@ -430,8 +437,8 @@ $('downloadPdf').addEventListener('click',()=>{
 
 $('downloadCsv').addEventListener('click',()=>{
   state.records=filterHiddenTests(state.records); if(!state.records.length){renderPreview();showStatus('No visible rows to export. X-ray tests are hidden automatically.','warn');return;} sortRecordsAscending(state.records); renderPreview();
-  const hdr=['Date','LAB No','Patient Name','Age','Sex','Test Name','RPT Parameters','Barcode'];
-  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"'; const rows=state.records.map(r=>[r.date,r.labNo,r.patient,r.age,r.sex,r.test,urineRoutineParameterText(r.test),r.barcode]);
+  const hdr=['Sr. No','Date','LAB No','Barcode','Patient Name','Age','Sex','Test Name','RPT Parameters'];
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"'; const rows=state.records.map((r,i)=>[i+1,r.date,r.labNo,r.barcode,r.patient,r.age,r.sex,r.test,urineRoutineParameterText(r.test)]);
   const csv=[hdr,...rows].map(row=>row.map(q).join(',')).join('\r\n'); const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='RPT_Extracted_Data.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 });
 drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();file.click()}});
