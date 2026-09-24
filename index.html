@@ -3,24 +3,31 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>RPT Worksheet Converter</title>
+<title>RPT Worksheet Converter | Techdiag Healthcare</title>
+<link rel="icon" href="logo.png" />
 <style>
-:root{--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#d9e1ec;--accent:#2457d6;--accent2:#173d9c;--ok:#0f8a5f;--warn:#b76a00;--danger:#b42318}
+:root{--bg:#f3f5fb;--card:#fff;--text:#16224a;--muted:#5f6a8a;--line:#d8def0;--red:#e31b23;--red2:#b8131a;--navy:#1f3a93;--navy2:#142a6e;--accent:var(--red);--accent2:var(--red2);--ok:#0f8a5f;--warn:#b76a00;--danger:#b42318}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
-.shell{max-width:1240px;margin:0 auto;padding:28px}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:18px}
-h1{font-size:28px;margin:0 0 7px}.sub{color:var(--muted);font-size:14px;line-height:1.5}.badge{background:#e9efff;color:#173d9c;border:1px solid #cdd9ff;padding:8px 11px;border-radius:999px;font-weight:700;font-size:12px;white-space:nowrap}
-.card{background:var(--card);border:1px solid var(--line);border-radius:15px;box-shadow:0 8px 30px rgba(20,35,70,.06);margin-bottom:16px}.card-h{padding:16px 18px;border-bottom:1px solid var(--line);font-weight:800}.card-b{padding:18px}
-.drop{border:2px dashed #aebbd0;border-radius:13px;padding:26px;text-align:center;background:#fbfcff;transition:.18s;cursor:pointer}.drop.drag{border-color:var(--accent);background:#f1f5ff}.drop strong{display:block;font-size:16px;margin-bottom:6px}.drop small{color:var(--muted)}
-input[type=file]{display:none}.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:13px}.primary{background:var(--accent);color:#fff}.primary:hover{background:var(--accent2)}.secondary{background:#eef2f7;color:#26344d}.ghost{background:#fff;border:1px solid var(--line);color:#26344d}.danger{background:#fff1f0;color:var(--danger);border:1px solid #ffd3ce}.btn:disabled{opacity:.45;cursor:not-allowed}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field label{display:block;font-size:12px;font-weight:800;margin-bottom:6px;color:#344054}.field input,.field select{width:100%;height:40px;border:1px solid #cfd7e3;border-radius:8px;padding:0 10px;background:#fff;color:#172033}.field .hint{font-size:11px;color:var(--muted);margin-top:5px}
-.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}.stat{border:1px solid var(--line);border-radius:10px;padding:12px;background:#fafcff}.stat b{display:block;font-size:20px}.stat span{font-size:11px;color:var(--muted)}
+.brandbar{background:#fff;border-bottom:4px solid var(--red);box-shadow:0 2px 14px rgba(31,58,147,.08)}.brandbar-in{max-width:1240px;margin:0 auto;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.logo{display:block;height:74px;width:auto;object-fit:cover;object-position:bottom;clip-path:inset(3px 0 0 0)}.brand-tag{background:var(--navy);color:#fff;padding:7px 13px;border-radius:999px;font-weight:700;font-size:12px;letter-spacing:.3px;white-space:nowrap}
+.shell{max-width:1240px;margin:0 auto;padding:24px 28px 28px}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:18px;padding:20px 22px;border-radius:15px;background:linear-gradient(120deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;border-left:6px solid var(--red)}
+h1{font-size:28px;margin:0 0 7px}.top .sub{color:#d6ddf5}.top .sub b{color:#fff}.sub{color:var(--muted);font-size:14px;line-height:1.5}.badge{background:var(--red);color:#fff;border:1px solid var(--red);padding:8px 11px;border-radius:999px;font-weight:700;font-size:12px;white-space:nowrap}
+.card{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--navy);border-radius:15px;box-shadow:0 8px 30px rgba(31,58,147,.07);margin-bottom:16px}.card-h{padding:16px 18px;border-bottom:1px solid var(--line);font-weight:800;color:var(--navy)}.card-b{padding:18px}
+.drop{border:2px dashed #b3bfe0;border-radius:13px;padding:26px;text-align:center;background:#f8f9fe;transition:.18s;cursor:pointer}.drop:hover{border-color:var(--navy)}.drop.drag{border-color:var(--red);background:#fff3f3}.drop strong{display:block;font-size:16px;margin-bottom:6px;color:var(--navy)}.drop small{color:var(--muted)}
+input[type=file]{display:none}.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:13px}.primary{background:var(--accent);color:#fff}.primary:hover{background:var(--accent2)}.secondary{background:var(--navy);color:#fff}.secondary:hover{background:var(--navy2)}.ghost{background:#fff;border:1px solid var(--line);color:var(--navy)}.danger{background:#fff1f0;color:var(--danger);border:1px solid #ffd3ce}.btn:disabled{opacity:.45;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field label{display:block;font-size:12px;font-weight:800;margin-bottom:6px;color:var(--navy)}.field input,.field select{width:100%;height:40px;border:1px solid #cdd5ec;border-radius:8px;padding:0 10px;background:#fff;color:var(--text)}.field input:focus,.field select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,58,147,.15)}.field .hint{font-size:11px;color:var(--muted);margin-top:5px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}.stat{border:1px solid var(--line);border-left:4px solid var(--red);border-radius:10px;padding:12px;background:#f8f9fe}.stat b{display:block;font-size:20px;color:var(--navy)}.stat span{font-size:11px;color:var(--muted)}
 .status{margin-top:13px;padding:10px 12px;border-radius:8px;font-size:12px;display:none}.status.show{display:block}.status.ok{background:#ecfdf3;color:#05603a;border:1px solid #b7efd2}.status.warn{background:#fff7e8;color:#8b4b00;border:1px solid #ffe0ad}.status.err{background:#fff1f0;color:#9c1c12;border:1px solid #ffd3ce}
-.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:520px}table{border-collapse:collapse;width:100%;min-width:850px;font-size:12px}th{position:sticky;top:0;background:#f6f8fc;text-align:left;padding:9px;border-bottom:1px solid var(--line);z-index:1}td{padding:7px 9px;border-bottom:1px solid #edf1f6;vertical-align:top}td[contenteditable=true]{outline:none}td[contenteditable=true]:focus{background:#fffbe8;box-shadow:inset 0 0 0 1px #e6c34e}.muted{color:var(--muted)}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:520px}table{border-collapse:collapse;width:100%;min-width:850px;font-size:12px}th{position:sticky;top:0;background:var(--navy);color:#fff;text-align:left;padding:9px;border-bottom:1px solid var(--line);z-index:1}td{padding:7px 9px;border-bottom:1px solid #edf1f6;vertical-align:top}td[contenteditable=true]{outline:none}td[contenteditable=true]:focus{background:#fffbe8;box-shadow:inset 0 0 0 1px #e6c34e}.muted{color:var(--muted)}
 .preview-empty{padding:34px;text-align:center;color:var(--muted)}.footer-note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:9px}
-@media(max-width:900px){.grid,.stats{grid-template-columns:1fr 1fr}.top{flex-direction:column}.shell{padding:16px}}@media(max-width:600px){.grid,.stats{grid-template-columns:1fr}}
+@media(max-width:900px){.grid,.stats{grid-template-columns:1fr 1fr}.top{flex-direction:column}.shell{padding:16px}.brandbar-in{padding:10px 16px}}@media(max-width:600px){.grid,.stats{grid-template-columns:1fr}.logo{height:54px}.brand-tag{display:none}}
 </style>
 </head>
 <body>
+<header class="brandbar"><div class="brandbar-in">
+  <img class="logo" src="logo.png" alt="Techdiag Healthcare Private Limited – Your High-Tech Diagnostics Partner" />
+  <div class="brand-tag">Lab Worksheet Tools</div>
+</div></header>
 <div class="shell">
   <div class="top">
     <div><h1>RPT Worksheet Converter</h1><div class="sub">Convert a <b>Patient Wise Worksheet (Details)</b> PDF into the RPT-style <b>Work Sheet Report</b> layout. Records are automatically sorted by <b>LAB No in ascending order</b>. <b>X-ray / X RAY / XRAY</b> tests are automatically hidden. For <b>URINE ROUTINE</b>, only <b>Specific Gravity → Pus Cells → Protein → Epithelial Cells</b> are shown; all other urine parameters are hidden.</div></div>
