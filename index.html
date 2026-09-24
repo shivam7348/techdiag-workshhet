@@ -5,73 +5,204 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>RPT Worksheet Converter | Techdiag Healthcare</title>
 <link rel="icon" href="logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
-:root{--bg:#f3f5fb;--card:#fff;--text:#16224a;--muted:#5f6a8a;--line:#d8def0;--red:#e31b23;--red2:#b8131a;--navy:#1f3a93;--navy2:#142a6e;--accent:var(--red);--accent2:var(--red2);--ok:#0f8a5f;--warn:#b76a00;--danger:#b42318}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
-.brandbar{background:#fff;border-bottom:4px solid var(--red);box-shadow:0 2px 14px rgba(31,58,147,.08)}.brandbar-in{max-width:1240px;margin:0 auto;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.logo{display:block;height:74px;width:auto;object-fit:cover;object-position:bottom;clip-path:inset(3px 0 0 0)}.brand-tag{background:var(--navy);color:#fff;padding:7px 13px;border-radius:999px;font-weight:700;font-size:12px;letter-spacing:.3px;white-space:nowrap}
-.shell{max-width:1240px;margin:0 auto;padding:24px 28px 28px}.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:18px;padding:20px 22px;border-radius:15px;background:linear-gradient(120deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;border-left:6px solid var(--red)}
-h1{font-size:28px;margin:0 0 7px}.top .sub{color:#d6ddf5}.top .sub b{color:#fff}.sub{color:var(--muted);font-size:14px;line-height:1.5}.badge{background:var(--red);color:#fff;border:1px solid var(--red);padding:8px 11px;border-radius:999px;font-weight:700;font-size:12px;white-space:nowrap}
-.card{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--navy);border-radius:15px;box-shadow:0 8px 30px rgba(31,58,147,.07);margin-bottom:16px}.card-h{padding:16px 18px;border-bottom:1px solid var(--line);font-weight:800;color:var(--navy)}.card-b{padding:18px}
-.drop{border:2px dashed #b3bfe0;border-radius:13px;padding:26px;text-align:center;background:#f8f9fe;transition:.18s;cursor:pointer}.drop:hover{border-color:var(--navy)}.drop.drag{border-color:var(--red);background:#fff3f3}.drop strong{display:block;font-size:16px;margin-bottom:6px;color:var(--navy)}.drop small{color:var(--muted)}
-input[type=file]{display:none}.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:13px}.primary{background:var(--accent);color:#fff}.primary:hover{background:var(--accent2)}.secondary{background:var(--navy);color:#fff}.secondary:hover{background:var(--navy2)}.ghost{background:#fff;border:1px solid var(--line);color:var(--navy)}.danger{background:#fff1f0;color:var(--danger);border:1px solid #ffd3ce}.btn:disabled{opacity:.45;cursor:not-allowed}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field label{display:block;font-size:12px;font-weight:800;margin-bottom:6px;color:var(--navy)}.field input,.field select{width:100%;height:40px;border:1px solid #cdd5ec;border-radius:8px;padding:0 10px;background:#fff;color:var(--text)}.field input:focus,.field select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,58,147,.15)}.field .hint{font-size:11px;color:var(--muted);margin-top:5px}
-.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}.stat{border:1px solid var(--line);border-left:4px solid var(--red);border-radius:10px;padding:12px;background:#f8f9fe}.stat b{display:block;font-size:20px;color:var(--navy)}.stat span{font-size:11px;color:var(--muted)}
-.status{margin-top:13px;padding:10px 12px;border-radius:8px;font-size:12px;display:none}.status.show{display:block}.status.ok{background:#ecfdf3;color:#05603a;border:1px solid #b7efd2}.status.warn{background:#fff7e8;color:#8b4b00;border:1px solid #ffe0ad}.status.err{background:#fff1f0;color:#9c1c12;border:1px solid #ffd3ce}
-.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:520px}table{border-collapse:collapse;width:100%;min-width:850px;font-size:12px}th{position:sticky;top:0;background:var(--navy);color:#fff;text-align:left;padding:9px;border-bottom:1px solid var(--line);z-index:1}td{padding:7px 9px;border-bottom:1px solid #edf1f6;vertical-align:top}td[contenteditable=true]{outline:none}td[contenteditable=true]:focus{background:#fffbe8;box-shadow:inset 0 0 0 1px #e6c34e}.muted{color:var(--muted)}
-.preview-empty{padding:34px;text-align:center;color:var(--muted)}.footer-note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:9px}
-@media(max-width:900px){.grid,.stats{grid-template-columns:1fr 1fr}.top{flex-direction:column}.shell{padding:16px}.brandbar-in{padding:10px 16px}}@media(max-width:600px){.grid,.stats{grid-template-columns:1fr}.logo{height:54px}.brand-tag{display:none}}
+:root{
+  --red:#e31b23;--red-600:#c8141b;--red-50:#fdecec;
+  --navy:#1f3a93;--navy-700:#172c72;--navy-900:#0f1d4d;--navy-50:#eef2fb;
+  --bg:#f5f7fb;--card:#fff;--text:#131c3a;--muted:#5d6785;--line:#e3e8f2;--line-2:#eef1f7;
+  --ok:#0f8a5f;--warn:#b76a00;--danger:#b42318;
+  --radius:14px;--shadow:0 1px 2px rgba(16,24,64,.04),0 6px 24px rgba(16,24,64,.06);
+  --accent:var(--red);--accent2:var(--red-600)
+}
+*{box-sizing:border-box}
+html,body{margin:0;overflow-x:hidden}
+body{font-family:Inter,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text);font-size:14px;-webkit-font-smoothing:antialiased}
+svg{flex:none}
+
+/* Top bar */
+.topbar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.topbar::after{content:"";display:block;height:3px;background:linear-gradient(90deg,var(--red) 0 34%,var(--navy) 34% 100%)}
+.topbar-in{max-width:1240px;margin:0 auto;padding:8px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.logo{display:block;height:62px;width:auto;clip-path:inset(3px 0 0 0)}
+.top-meta{display:flex;align-items:center;gap:14px}
+.app-name{text-align:right;line-height:1.25}.app-name b{display:block;font-size:14px;color:var(--navy-900)}.app-name span{font-size:12px;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill-secure{background:#e9f8f1;color:#0b6b49;border:1px solid #c5ecd9}
+
+/* Hero */
+.hero{background:radial-gradient(1200px 300px at 85% -40%,rgba(227,27,35,.35),transparent 60%),linear-gradient(120deg,var(--navy-900) 0%,var(--navy) 100%);color:#fff;position:relative;overflow:hidden}
+.hero-in{max-width:1240px;margin:0 auto;padding:34px 28px 78px;position:relative;z-index:1}
+.hero-ecg{position:absolute;left:0;right:0;bottom:34px;width:100%;height:60px;opacity:.18}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#c9d3f2}
+.eyebrow::before{content:"";width:18px;height:2px;background:var(--red);border-radius:2px}
+.hero h1{font-size:30px;line-height:1.2;margin:10px 0 8px;font-weight:800;letter-spacing:-.02em}
+.hero p{margin:0;max-width:720px;color:#d3dbf3;font-size:15px;line-height:1.6}
+.rules{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.rule{max-width:100%;display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:#fff;padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:500}
+.rule svg{color:#ff8a8f}
+
+/* Layout */
+.shell{max-width:1240px;margin:-50px auto 0;padding:0 28px 28px;position:relative;z-index:2}
+.row{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:18px;margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:18px}
+.row .card{margin-bottom:0}
+.card-h{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line-2)}
+.card-h h2{margin:0;font-size:15px;font-weight:700;color:var(--navy-900)}
+.card-h p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+.card-h .grow{flex:1;min-width:0}
+.step{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--navy-50);color:var(--navy);font-weight:800;font-size:13px;border:1px solid #d9e1f5}
+.card-b{padding:20px}
+
+/* Drop zone */
+.drop{border:1.5px dashed #c3cde6;border-radius:12px;padding:28px 20px;text-align:center;background:linear-gradient(180deg,#fafbff,#f5f7fd);transition:.18s;cursor:pointer}
+.drop:hover{border-color:var(--navy);background:#f3f6fe}
+.drop.drag{border-color:var(--red);background:var(--red-50)}
+.drop-ic{width:48px;height:48px;border-radius:12px;margin:0 auto 12px;display:grid;place-items:center;background:#fff;border:1px solid var(--line);color:var(--red);box-shadow:0 2px 8px rgba(16,24,64,.06)}
+.drop strong{display:block;font-size:15px;font-weight:700;margin-bottom:4px;color:var(--navy-900);word-break:break-all}
+.drop small{color:var(--muted);font-size:12.5px}
+
+/* Buttons */
+input[type=file]{display:none}
+.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;border-radius:9px;padding:10px 16px;font:600 13px/1 Inter,"Segoe UI",Arial,sans-serif;cursor:pointer;transition:background .15s,box-shadow .15s,border-color .15s}
+.primary{background:var(--red);color:#fff;box-shadow:0 1px 2px rgba(200,20,27,.25)}
+.primary:hover:not(:disabled){background:var(--red-600);box-shadow:0 4px 12px rgba(227,27,35,.25)}
+.secondary{background:var(--navy);color:#fff}.secondary:hover:not(:disabled){background:var(--navy-700)}
+.ghost{background:#fff;border-color:var(--line);color:var(--navy-900)}.ghost:hover{background:var(--navy-50)}
+.danger{background:#fff1f0;color:var(--danger);border-color:#ffd3ce}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn:focus-visible,.drop:focus-visible{outline:3px solid rgba(31,58,147,.3);outline-offset:2px}
+
+/* Fields */
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+.field label{display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:#34405e}
+.field input,.field select{width:100%;height:42px;border:1px solid #d3daea;border-radius:9px;padding:0 12px;background:#fff;color:var(--text);font:500 13.5px Inter,"Segoe UI",Arial,sans-serif;transition:.15s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(31,58,147,.12)}
+.field .hint{font-size:11.5px;color:var(--muted);margin-top:6px}
+
+/* KPI tiles */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.stat{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+.stat-ic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:var(--navy-50);color:var(--navy)}
+.stat.alt .stat-ic{background:var(--red-50);color:var(--red)}
+.stat b{display:block;font-size:22px;font-weight:800;color:var(--navy-900);line-height:1.1}
+.stat span{font-size:12px;color:var(--muted)}
+
+/* Status */
+.status{margin-top:14px;padding:11px 13px;border-radius:9px;font-size:12.5px;line-height:1.5;display:none}
+.status.show{display:block}
+.status.ok{background:#ecfdf3;color:#05603a;border:1px solid #b7efd2}
+.status.warn{background:#fff7e8;color:#8b4b00;border:1px solid #ffe0ad}
+.status.err{background:#fff1f0;color:#9c1c12;border:1px solid #ffd3ce}
+
+/* Table */
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:11px;max-height:540px}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:850px;font-size:12.5px}
+th{position:sticky;top:0;background:var(--navy);color:#fff;text-align:left;padding:11px 12px;font-weight:600;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;z-index:1;white-space:nowrap}
+th:first-child{border-left:3px solid var(--red)}
+td{padding:9px 12px;border-bottom:1px solid var(--line-2);vertical-align:top}
+tbody tr:nth-child(even) td{background:#fafbfe}
+tbody tr:hover td{background:#f1f4fc}
+td:first-child{color:var(--muted);font-variant-numeric:tabular-nums}
+td[contenteditable=true]{outline:none;cursor:text}
+td[contenteditable=true]:focus{background:#fffbe8 !important;box-shadow:inset 0 0 0 1.5px #e6c34e}
+.muted{color:var(--muted)}
+.preview-empty{padding:48px 20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:11px;background:#fbfcfe}
+.review-actions{display:flex;gap:10px;flex-wrap:wrap}
+.review-actions .btn{padding:9px 14px}
+.footer-note{display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--muted);line-height:1.6;margin-top:14px;padding:12px 14px;background:var(--navy-50);border-radius:10px}
+.footer-note svg{color:var(--navy);margin-top:2px}
+
+/* Footer */
+.site-footer{border-top:1px solid var(--line);background:#fff;margin-top:10px}
+.site-footer-in{max-width:1240px;margin:0 auto;padding:18px 28px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.site-footer b{color:var(--navy-900)}.site-footer .tag{color:var(--red);font-weight:600}
+
+@media(max-width:1000px){.row{grid-template-columns:minmax(0,1fr)}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){
+  .topbar-in,.hero-in,.shell,.site-footer-in{padding-left:16px;padding-right:16px}
+  .logo{height:46px}.app-name{display:none}
+  .hero h1{font-size:23px}.hero p{font-size:14px}
+  .card-h{flex-wrap:wrap}.review-actions{width:100%}
+}
+@media(max-width:480px){.stats{grid-template-columns:1fr}.pill-secure{display:none}}
 </style>
 </head>
 <body>
-<header class="brandbar"><div class="brandbar-in">
+<header class="topbar"><div class="topbar-in">
   <img class="logo" src="logo.png" alt="Techdiag Healthcare Private Limited – Your High-Tech Diagnostics Partner" />
-  <div class="brand-tag">Lab Worksheet Tools</div>
+  <div class="top-meta">
+    <div class="app-name"><b>RPT Worksheet Converter</b><span>Laboratory Operations</span></div>
+    <span class="pill pill-secure"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Processed locally</span>
+  </div>
 </div></header>
-<div class="shell">
-  <div class="top">
-    <div><h1>RPT Worksheet Converter</h1><div class="sub">Convert a <b>Patient Wise Worksheet (Details)</b> PDF into the RPT-style <b>Work Sheet Report</b> layout. Records are automatically sorted by <b>LAB No in ascending order</b>. <b>X-ray / X RAY / XRAY</b> tests are automatically hidden. For <b>URINE ROUTINE</b>, only <b>Specific Gravity → Pus Cells → Protein → Epithelial Cells</b> are shown; all other urine parameters are hidden.</div></div>
-    <div class="badge">PDF → RPT PDF</div>
-  </div>
 
-  <div class="card">
-    <div class="card-h">1. Upload worksheet PDF</div>
-    <div class="card-b">
-      <div id="drop" class="drop">
-        <strong>Drop the worksheet PDF here</strong>
-        <small>or click to select a PDF</small>
-        <input id="file" type="file" accept="application/pdf,.pdf" />
+<section class="hero">
+  <svg class="hero-ecg" viewBox="0 0 1200 60" preserveAspectRatio="none" fill="none" stroke="#fff" stroke-width="2"><path d="M0 30H420l12-14 10 30 12-44 12 50 10-22h40l8-8 8 8H760l12-14 10 30 12-44 12 50 10-22H1200"/></svg>
+  <div class="hero-in">
+    <div class="eyebrow">Worksheet Tools</div>
+    <h1>RPT Worksheet Converter</h1>
+    <p>Convert a <b>Patient Wise Worksheet (Details)</b> PDF into a print-ready RPT <b>Work Sheet Report</b> in A4 landscape.</p>
+    <div class="rules">
+      <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Sorted by LAB No (ascending)</span>
+      <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>X-ray tests hidden automatically</span>
+      <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Urine Routine: Sp. Gravity → Pus Cells → Protein → Epithelial Cells</span>
+    </div>
+  </div>
+</section>
+
+<main class="shell">
+  <div class="row">
+    <div class="card">
+      <div class="card-h"><span class="step">1</span><div class="grow"><h2>Upload worksheet</h2><p>Patient Wise Worksheet (Details) export in PDF format</p></div></div>
+      <div class="card-b">
+        <div id="drop" class="drop" tabindex="0" role="button" aria-label="Select worksheet PDF">
+          <div class="drop-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg></div>
+          <strong>Drop the worksheet PDF here</strong>
+          <small>or click to select a PDF</small>
+          <input id="file" type="file" accept="application/pdf,.pdf" />
+        </div>
+        <div class="btns"><button id="parseBtn" class="btn primary" disabled>Read & Convert Data</button><button id="clearBtn" class="btn ghost">Clear</button></div>
+        <div id="status" class="status"></div>
       </div>
-      <div class="btns"><button id="parseBtn" class="btn primary" disabled>Read & Convert Data</button><button id="clearBtn" class="btn ghost">Clear</button></div>
-      <div id="status" class="status"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><span class="step">2</span><div class="grow"><h2>Report settings</h2><p>Printed on the RPT worksheet header</p></div></div>
+      <div class="card-b">
+        <div class="grid">
+          <div class="field"><label for="section">Section / Department</label><input id="section" value="CLINICAL PATHOLOGY" /></div>
+          <div class="field"><label for="fixedHeading">Branch heading <span class="muted" style="font-weight:400">(optional)</span></label><input id="fixedHeading" placeholder="e.g. MIRA ROAD MAIN BRANCH" /><div class="hint">Shown above each patient block when filled in.</div></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-h">2. RPT output settings</div>
-    <div class="card-b">
-      <div class="grid">
-        <div class="field"><label>Section / Department</label><input id="section" value="CLINICAL PATHOLOGY" /></div>
-        <div class="field"><label>Branch heading (optional)</label><input id="fixedHeading" placeholder="e.g. MIRA ROAD MAIN BRANCH" /></div>
-      </div>
-      <div class="stats">
-        <div class="stat"><b id="sRecords">0</b><span>worksheet rows</span></div>
-        <div class="stat"><b id="sPatients">0</b><span>unique patients</span></div>
-        <div class="stat"><b id="sTests">0</b><span>unique tests</span></div>
-        <div class="stat"><b id="sWarnings">0</b><span>unparsed blocks / warnings</span></div>
-      </div>
-    </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div><div><b id="sRecords">0</b><span>Worksheet rows</span></div></div>
+    <div class="stat"><div class="stat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><b id="sPatients">0</b><span>Unique patients</span></div></div>
+    <div class="stat"><div class="stat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6L4.5 18.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-2.5L14 9V3"/><path d="M7 15h10"/></svg></div><div><b id="sTests">0</b><span>Unique tests</span></div></div>
+    <div class="stat alt"><div class="stat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div><div><b id="sWarnings">0</b><span>Warnings</span></div></div>
   </div>
 
   <div class="card">
-    <div class="card-h">3. Review extracted data <span class="muted" style="font-weight:500">(cells are editable)</span></div>
+    <div class="card-h"><span class="step">3</span><div class="grow"><h2>Review &amp; export</h2><p>Cells are editable. Click any value to correct it before downloading.</p></div>
+      <div class="review-actions"><button id="downloadPdf" class="btn primary" disabled><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download RPT PDF</button><button id="downloadCsv" class="btn secondary" disabled><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>CSV</button></div>
+    </div>
     <div class="card-b">
       <div id="preview" class="preview-empty">Upload a worksheet PDF to see the extracted rows.</div>
-      <div class="btns"><button id="downloadPdf" class="btn primary" disabled>Download RPT PDF</button><button id="downloadCsv" class="btn secondary" disabled>Download CSV</button></div>
-      <div class="footer-note">The worksheet file is processed in your browser; this page does not upload it to a backend. The converter automatically sorts every uploaded worksheet by LAB No in ascending order, hides X-ray / X RAY / XRAY tests, and produces an A4 landscape RPT worksheet. URINE ROUTINE shows only Specific Gravity, Pus Cells, Protein and Epithelial Cells in that order; all other urine parameters stay hidden.</div>
+      <div class="footer-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><div>The worksheet is processed entirely in your browser and is never uploaded to a server. Output is an A4 landscape RPT worksheet sorted by LAB No, with X-ray tests removed and URINE ROUTINE limited to Specific Gravity, Pus Cells, Protein and Epithelial Cells.</div></div>
     </div>
   </div>
-</div>
+</main>
+
+<footer class="site-footer"><div class="site-footer-in">
+  <div>© <span id="yr"></span> <b>Techdiag Healthcare Private Limited</b></div>
+  <div class="tag">Your High-Tech Diagnostics Partner</div>
+</div></footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -303,6 +434,8 @@ $('downloadCsv').addEventListener('click',()=>{
   const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"'; const rows=state.records.map(r=>[r.date,r.labNo,r.patient,r.age,r.sex,r.test,urineRoutineParameterText(r.test),r.barcode]);
   const csv=[hdr,...rows].map(row=>row.map(q).join(',')).join('\r\n'); const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='RPT_Extracted_Data.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 });
+drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();file.click()}});
+$('yr').textContent=new Date().getFullYear();
 renderPreview();
 })();
 </script>
