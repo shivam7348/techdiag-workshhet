@@ -159,7 +159,7 @@ td[contenteditable=true]:focus{background:#fffbe8 !important;box-shadow:inset 0 
     <h1>RPT Worksheet Converter</h1>
     <p>Convert a <b>Patient Wise Worksheet (Details)</b> PDF into a print-ready RPT <b>Work Sheet Report</b> in A4 landscape.</p>
     <div class="rules">
-      <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Serial order: LAB No → Blood Group first → Barcode (ascending)</span>
+      <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Serial order: Barcode (ascending) → Blood Group first</span>
       <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>X-ray tests hidden automatically</span>
       <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Urine Routine: Sp. Gravity → Pus Cells → Protein → Epithelial Cells</span>
     </div>
@@ -207,7 +207,7 @@ td[contenteditable=true]:focus{background:#fffbe8 !important;box-shadow:inset 0 
     </div>
     <div class="card-b">
       <div id="preview" class="preview-empty">Upload a worksheet PDF to see the extracted rows.</div>
-      <div class="footer-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><div>The worksheet is processed entirely in your browser and is never uploaded to a server. Output is an A4 landscape RPT worksheet sorted by LAB No, with X-ray tests removed and URINE ROUTINE limited to Specific Gravity, Pus Cells, Protein and Epithelial Cells.</div></div>
+      <div class="footer-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><div>The worksheet is processed entirely in your browser and is never uploaded to a server. Output is an A4 landscape RPT worksheet sorted by Barcode, with X-ray tests removed and URINE ROUTINE limited to Specific Gravity, Pus Cells, Protein and Epithelial Cells.</div></div>
     </div>
   </div>
 </main>
@@ -399,9 +399,16 @@ function naturalCompare(a,b){
   return 0;
 }
 function isBloodGroup(testName){return /\bBLOOD\s*GROUP|\bABO\b/i.test(String(testName||''))}
+function barcodeNum(bc){const m=String(bc||'').match(/\d{3,}/);return m?Number(m[0]):Infinity}
 function sortRecordsAscending(rows){
+  // Each patient is placed by the smallest barcode number among their tests (WB002646, 002646F, R002646A → 2646),
+  // so a patient's tests stay together and patients follow the barcode sequence.
+  const pkey=r=>r.date+'|'+r.labNo+'|'+r.patient, pnum=new Map();
+  rows.forEach(r=>{const n=barcodeNum(r.barcode),k=pkey(r);if(!pnum.has(k)||n<pnum.get(k))pnum.set(k,n)});
   rows.sort((a,b)=>{
-    // Serial order: LAB No ascending, BLOOD GROUP first within a patient, then Barcode ascending.
+    // Serial order: Barcode number ascending, BLOOD GROUP first within a patient, then Barcode ascending.
+    const na=pnum.get(pkey(a)), nb=pnum.get(pkey(b));
+    if(na!==nb) return na===Infinity?1:nb===Infinity?-1:na-nb;
     const lab=naturalCompare(a.labNo,b.labNo);
     if(lab) return lab;
     // Within a patient, BLOOD GROUP is always listed first.
@@ -425,8 +432,8 @@ parseBtn.addEventListener('click',async()=>{
     state.records=sortRecordsAscending(visible); state.warnings=res.warnings; renderPreview();
     if(!res.records.length) showStatus('No worksheet rows could be extracted. Please check that the PDF is a Patient Wise Worksheet (Details) export.','err');
     else if(!state.records.length && state.hiddenCount) showStatus('All extracted rows were X-ray tests, so they were hidden automatically.','warn');
-    else if(res.warnings.length) showStatus('Extracted '+state.records.length+' visible rows, sorted by LAB No in ascending order. '+state.hiddenCount+' X-ray row(s) hidden automatically. '+res.warnings.length+' warning(s). Review the table before downloading.','warn');
-    else showStatus('Extracted '+state.records.length+' visible worksheet rows successfully and sorted by LAB No in ascending order. '+state.hiddenCount+' X-ray row(s) hidden automatically.','ok');
+    else if(res.warnings.length) showStatus('Extracted '+state.records.length+' visible rows, sorted by Barcode in ascending order. '+state.hiddenCount+' X-ray row(s) hidden automatically. '+res.warnings.length+' warning(s). Review the table before downloading.','warn');
+    else showStatus('Extracted '+state.records.length+' visible worksheet rows successfully and sorted by Barcode in ascending order. '+state.hiddenCount+' X-ray row(s) hidden automatically.','ok');
   }catch(err){console.error(err);showStatus(err.message||'Unable to read this PDF.','err')}
   finally{parseBtn.disabled=false;parseBtn.textContent='Read & Convert Data'}
 });
