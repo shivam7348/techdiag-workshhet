@@ -466,12 +466,19 @@ $('downloadPdf').addEventListener('click',()=>{
     let ty=y;
     let lastBarcode=null;
     testRows.forEach((row,ri)=>{
+      const rowH=Math.max(1,row.testLines.length,row.paramLines.length)*8;
+      // A patient with more tests than fit on one page continues on the next page instead of running off the bottom.
+      if(ty+rowH>H-bottom-12){
+        addPage();doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text('Barcode',col.barcode,y);doc.text('Patient Name',col.patient,y);doc.text('Test Name',col.test,y);y+=14;
+        doc.setFont('helvetica','normal');doc.text(g.labNo,col.lab,y);doc.setFont('helvetica','bold');doc.text(split(doc,g.patient+' (contd.)',width.patient)[0],col.patient,y);doc.setFont('helvetica','normal');
+        ty=y;lastBarcode=null;
+      }
       const bc=g.tests[ri].barcode||''; if(bc!==lastBarcode){doc.text(bc,col.barcode,ty);lastBarcode=bc}
       row.testLines.forEach((ln,i)=>doc.text(ln,col.test,ty+i*8));
       if(row.paramLines.length){doc.setFontSize(6.1);row.paramLines.forEach((ln,i)=>doc.text(ln,col.params,ty+i*8));doc.setFontSize(7)}
       ty+=Math.max(1,row.testLines.length,row.paramLines.length)*8;
     });
-    y+=Math.max(1,n)*8+8;doc.setLineDashPattern([2,2],0);doc.line(left,y,right,y);doc.setLineDashPattern([],0);y+=13;
+    y=Math.max(y+patientLines.length*8,ty)+8;doc.setLineDashPattern([2,2],0);doc.line(left,y,right,y);doc.setLineDashPattern([],0);y+=13;
   }
   const pages=doc.internal.getNumberOfPages();for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.text(`Page ${i} of ${pages}`,W/2,H-10,{align:'center'})}
   const d=range.from?range.from.replace(/[^A-Za-z0-9-]/g,'-'):'Converted';doc.save(`RPT_Worksheet_${d}.pdf`);
