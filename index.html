@@ -90,6 +90,16 @@ input[type=file]{display:none}
 .stat.alt .stat-ic{background:var(--red-50);color:var(--red)}
 .stat b{display:block;font-size:22px;font-weight:800;color:var(--navy-900);line-height:1.1}
 .stat span{font-size:12px;color:var(--muted)}
+.stat-tests{position:relative;cursor:pointer}
+.stat-tests:hover,.stat-tests:focus-visible{border-color:var(--navy);outline:none}
+.stat-pop{display:none;position:absolute;top:calc(100% + 8px);left:0;right:0;min-width:260px;z-index:20;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(16,24,64,.16);padding:10px 0;max-height:320px;overflow:auto;cursor:default}
+.stat-tests:hover .stat-pop,.stat-tests.open .stat-pop{display:block}
+.stat-pop h4{margin:0 14px 6px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.stat-pop ul{list-style:none;margin:0;padding:0}
+.stat-pop li{display:flex;justify-content:space-between;gap:12px;padding:6px 14px;font-size:12.5px;color:var(--text)}
+.stat-pop li:nth-child(odd){background:var(--line-2)}
+.stat-pop li em{font-style:normal;font-weight:700;color:var(--navy)}
+.stat-pop .empty{padding:4px 14px;font-size:12.5px;color:var(--muted)}
 
 /* Status */
 .status{margin-top:14px;padding:11px 13px;border-radius:9px;font-size:12.5px;line-height:1.5;display:none}
@@ -184,7 +194,7 @@ td[contenteditable=true]:focus{background:#fffbe8 !important;box-shadow:inset 0 
   <div class="stats">
     <div class="stat"><div class="stat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div><div><b id="sRecords">0</b><span>Worksheet rows</span></div></div>
     <div class="stat"><div class="stat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><b id="sPatients">0</b><span>Total patients</span></div></div>
-    <div class="stat"><div class="stat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6L4.5 18.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-2.5L14 9V3"/><path d="M7 15h10"/></svg></div><div><b id="sTests">0</b><span>Unique tests</span></div></div>
+    <div class="stat stat-tests" id="testsCard" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false" title="Show test list"><div class="stat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6L4.5 18.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-2.5L14 9V3"/><path d="M7 15h10"/></svg></div><div><b id="sTests">0</b><span>Unique tests</span></div><div class="stat-pop" id="testsPop"></div></div>
     <div class="stat alt"><div class="stat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div><div><b id="sWarnings">0</b><span>Warnings</span></div></div>
   </div>
 
@@ -416,7 +426,7 @@ parseBtn.addEventListener('click',async()=>{
 
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function renderPreview(){
-  const r=state.records; $('sRecords').textContent=r.length; $('sPatients').textContent=r.length+state.hiddenCount; $('sTests').textContent=new Set(r.map(x=>x.test)).size; $('sWarnings').textContent=state.warnings.length;
+  const r=state.records; $('sRecords').textContent=r.length; $('sPatients').textContent=r.length+state.hiddenCount; $('sTests').textContent=new Set(r.map(x=>x.test)).size; renderTestList(r); $('sWarnings').textContent=state.warnings.length;
   $('downloadPdf').disabled=!r.length; $('downloadCsv').disabled=!r.length;
   if(!r.length){$('preview').className='preview-empty';$('preview').innerHTML='Upload a worksheet PDF to see the extracted rows.';return}
   $('preview').className='table-wrap';
@@ -425,6 +435,16 @@ function renderPreview(){
     const i=+td.dataset.i,k=td.dataset.k,v=td.innerText.trim(); state.records[i][k]=v;
   }));
 }
+function renderTestList(r){
+  const counts=new Map(); r.forEach(x=>counts.set(x.test,(counts.get(x.test)||0)+1));
+  const list=[...counts].sort((a,b)=>b[1]-a[1]||naturalCompare(a[0],b[0]));
+  $('testsPop').innerHTML=list.length?'<h4>'+list.length+' test'+(list.length===1?'':'s')+' · rows</h4><ul>'+list.map(([t,n])=>`<li><span>${esc(t||'(blank)')}</span><em>${n}</em></li>`).join('')+'</ul>':'<div class="empty">No tests yet. Upload a worksheet PDF.</div>';
+}
+const testsCard=$('testsCard');
+function setTestsOpen(open){testsCard.classList.toggle('open',open);testsCard.setAttribute('aria-expanded',open)}
+testsCard.addEventListener('click',e=>{if(!e.target.closest('.stat-pop'))setTestsOpen(!testsCard.classList.contains('open'))});
+testsCard.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setTestsOpen(!testsCard.classList.contains('open'))}else if(e.key==='Escape')setTestsOpen(false)});
+document.addEventListener('click',e=>{if(!testsCard.contains(e.target))setTestsOpen(false)});
 function cell(i,k,v,cl=''){return `<td class="${cl}" contenteditable="true" data-i="${i}" data-k="${k}">${esc(v)}</td>`}
 
 function toDateObj(s){const m=String(s).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?new Date(+m[3],+m[2]-1,+m[1]):null}
