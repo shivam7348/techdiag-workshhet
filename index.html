@@ -250,10 +250,33 @@ function lineCells(line){
   }
   if(cur) out.push(cur);return out;
 }
+const DATE_RE=/\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}/;
+const AGE_RE=/(\d+(?:\.\d+)?)\s*(Years?|Yrs?|Y|Months?|Mths?|M|Days?|D)\b\.?/i;
+const SEX_RE=/\b(Male|Female|Other|Transgender|M|F)\b/i;
+// A patient block starts with "<LAB No>, <Name>, <Age> Year|Month|Day" — stricter than just a number so wrapped barcode/date lines are not mistaken for a new block.
+const START_RE=/^\s*\d{5,15}\s*,\s*[^,]+,\s*\d+(?:\.\d+)?\s*(?:Years?|Yrs?|Months?|Mths?|Days?|Y|M|D)\b/i;
+const clean=s=>String(s??'').replace(/\s+/g,' ').trim().replace(/^,+|,+$/g,'').trim();
+function normDate(s){const m=String(s||'').match(/(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/);if(!m)return clean(s);const y=m[3].length===2?'20'+m[3]:m[3];return `${m[1].padStart(2,'0')}/${m[2].padStart(2,'0')}/${y}`}
+function fmtAge(n,unit){unit=unit.toLowerCase();return /^(y|yrs?|years?)$/.test(unit)?n:n+' '+(/^m/.test(unit)?'Month':'Day')+(+n===1?'':'s')}
+function headerComplete(h){return /Barcode\s*:\s*[^,\s][^,]*,\s*\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}/i.test(h)}
 function parseHeader(header){
-  const re=/^\s*(\d{6,12})\s*,\s*(.*?)\s*,\s*(\d+)\s*Year\s*,\s*([^,]+?)\s*,\s*Ref\.?\s*By\s*:\s*(.*?)\s*,\s*(.*?)\s*,?\s*Barcode\s*:\s*([^,]+?)\s*,\s*(\d{1,2}\/\d{1,2}\/\d{4})\s*$/i;
-  const m=header.match(re); if(!m) return null;
-  return {labNo:m[1].trim(),patient:m[2].replace(/\s+/g,' ').trim(),age:m[3].trim(),sex:m[4].trim(),test:m[6].replace(/\s+/g,' ').trim().replace(/,\s*$/,''),barcode:m[7].trim(),date:m[8].trim()};
+  header=clean(header);
+  const strict=/^(\d{5,15})\s*,\s*(.*?)\s*,\s*(\d+(?:\.\d+)?)\s*(Years?|Yrs?|Y|Months?|Mths?|M|Days?|D)\.?\s*,\s*([^,]+?)\s*,\s*Ref\.?\s*By\s*:?\s*(.*?)\s*,\s*(.*?)\s*,?\s*Barcode\s*:\s*([^,]*?)\s*,?\s*(\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4})\s*,?\s*(.*)$/i;
+  const m=header.match(strict);
+  if(m) return {labNo:m[1],patient:clean(m[2]),age:fmtAge(m[3],m[4]),sex:clean(m[5]),refBy:clean(m[6]),test:clean(m[7]),barcode:clean(m[8]),date:normDate(m[9]),ok:true};
+  // Lenient fallback: pull every field we can find so the row is never dropped.
+  const parts=header.split(',').map(clean);
+  const rec={labNo:(header.match(/^\s*(\d{5,15})/)||[])[1]||parts[0]||'',patient:parts[1]||'',age:'',sex:'',refBy:'',test:'',barcode:'',date:'',ok:false};
+  const age=header.match(AGE_RE); if(age) rec.age=fmtAge(age[1],age[2]);
+  const ageIdx=parts.findIndex(p=>AGE_RE.test(p));
+  const sexPart=parts.slice(ageIdx+1).find(p=>new RegExp('^'+SEX_RE.source+'$','i').test(p)); if(sexPart) rec.sex=sexPart;
+  const ref=header.match(/Ref\.?\s*By\s*:?\s*([^,]*)/i); if(ref) rec.refBy=clean(ref[1]);
+  const bc=header.match(/Barcode\s*:\s*([^,]*)/i); if(bc) rec.barcode=clean(bc[1]).replace(DATE_RE,'').trim();
+  const dates=header.match(new RegExp(DATE_RE.source,'g')); if(dates) rec.date=normDate(dates[dates.length-1]);
+  const refIdx=parts.findIndex(p=>/^Ref\.?\s*By/i.test(p)), bcIdx=parts.findIndex(p=>/Barcode\s*:/i.test(p));
+  if(refIdx>=0) rec.test=clean(parts.slice(refIdx+1,bcIdx>refIdx?bcIdx:undefined).filter(p=>!DATE_RE.test(p)||p.replace(DATE_RE,'').trim()).join(', '));
+  else if(bcIdx>0) rec.test=clean(parts.slice(Math.max(ageIdx+2,2),bcIdx).join(', '));
+  return rec;
 }
 function extractParams(lines){
   const frags=[];
@@ -280,28 +303,47 @@ function extractParams(lines){
   }
   return [...new Set(params.filter(p=>p && !/^barcode\b/i.test(p)))];
 }
+// Multi-column worksheets place patient blocks side by side; split the page at each column's
+// header x-position so lines from different columns are never merged. Returns lines per column.
+function pageColumns(items){
+  const xs=[];
+  for(const l of buildLines(items)) l.items.forEach((it,k)=>{
+    if(/^\d{5,15}\s*,?/.test(it.str) && START_RE.test(l.items.slice(k).map(i=>i.str).join(' '))) xs.push(it.x);
+  });
+  const starts=[]; xs.sort((a,b)=>a-b).forEach(x=>{if(!starts.length || x-starts[starts.length-1]>40) starts.push(x)});
+  if(starts.length<=1) return [buildLines(items)];
+  return starts.map((x,i)=>{const lo=i?x-6:-Infinity, hi=i+1<starts.length?starts[i+1]-6:Infinity; return buildLines(items.filter(it=>it.transform[4]>=lo && it.transform[4]<hi))});
+}
 async function parsePdf(f){
   if(!window.pdfjsLib) throw new Error('PDF engine could not load. Please connect to the internet and reopen the converter.');
   const data=new Uint8Array(await f.arrayBuffer());
   const pdf=await pdfjsLib.getDocument({data}).promise;
-  const records=[],warnings=[]; const startRe=/^\s*\d{6,12}\s*,/;
+  const records=[],warnings=[],all=[];
+  // Read every page first so a header that wraps onto the next page is still joined.
   for(let p=1;p<=pdf.numPages;p++){
-    const page=await pdf.getPage(p), content=await page.getTextContent(), lines=buildLines(content.items);
-    const starts=[]; lines.forEach((l,i)=>{if(startRe.test(l.text)) starts.push(i)});
-    if(!starts.length) warnings.push('Page '+p+': no patient block detected.');
-    for(let s=0;s<starts.length;s++){
-      const a=starts[s], b=s+1<starts.length?starts[s+1]:lines.length, block=lines.slice(a,b);
-      let headerParts=[],headerEnd=-1;
-      for(let j=0;j<block.length;j++){
-        const t=block[j].text.trim(); if(/Patient Wise Worksheet/i.test(t)) continue;
-        headerParts.push(t); headerEnd=j; if(/Barcode\s*:/i.test(t)) break;
-      }
-      const header=headerParts.join(' ').replace(/\s+/g,' ').trim();
-      const rec=parseHeader(header);
-      if(!rec){warnings.push('Page '+p+': could not parse block starting “'+(block[0]?.text||'').slice(0,70)+'…”');continue}
-      rec.page=p; records.push(rec);
+    const page=await pdf.getPage(p), content=await page.getTextContent();
+    let found=false;
+    for(const lines of pageColumns(content.items)) for(const l of lines){
+      l.text=l.text.replace(/^.*?Patient Wise Worksheet\s*\(Details\)\s*(?:For\s*\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4})?\s*/i,'').trim();
+      if(!l.text || /^Page\s+\d+(\s+of\s+\d+)?$/i.test(l.text)) continue;
+      l.page=p; if(START_RE.test(l.text)){l.start=true;found=true} all.push(l);
     }
+    if(!found) warnings.push('Page '+p+': no patient header detected.');
   }
+  let rawBarcodes=0;
+  for(let i=0;i<all.length;i++){
+    rawBarcodes+=(all[i].text.match(/Barcode\s*:/gi)||[]).length;
+    if(!all[i].start) continue;
+    // Collect header lines until "Barcode: <code>, <date>" is complete (the barcode/date often wraps to the next line).
+    let header=all[i].text;
+    for(let j=i+1;j<all.length && j<=i+5 && !headerComplete(header) && !all[j].start;j++){
+      if(/Barcode\s*:/i.test(header) || /Ref\.?\s*By|Barcode|^\S+\s*,\s*\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}/i.test(all[j].text) || all[j].x<=all[i].x+3) header+=' '+all[j].text; else break;
+    }
+    const rec=parseHeader(header); rec.page=all[i].page;
+    if(!rec.ok) warnings.push('Page '+rec.page+': header read with fallback, please verify LAB No '+rec.labNo+' — “'+clean(header).slice(0,90)+'…”');
+    delete rec.ok; records.push(rec);
+  }
+  if(rawBarcodes>records.length) warnings.push((rawBarcodes-records.length)+' block(s) with a Barcode could not be matched to a patient header. Please compare with the source PDF.');
   return {records,warnings};
 }
 
@@ -378,7 +420,7 @@ function renderPreview(){
   $('downloadPdf').disabled=!r.length; $('downloadCsv').disabled=!r.length;
   if(!r.length){$('preview').className='preview-empty';$('preview').innerHTML='Upload a worksheet PDF to see the extracted rows.';return}
   $('preview').className='table-wrap';
-  $('preview').innerHTML='<table><thead><tr><th>Sr. No</th><th>Date</th><th>LAB No</th><th>Barcode</th><th>Patient Name</th><th>Age</th><th>Sex</th><th>Test Name</th><th>RPT Parameters</th></tr></thead><tbody>'+r.map((x,i)=>`<tr><td>${i+1}</td>${cell(i,'date',x.date)}${cell(i,'labNo',x.labNo)}${cell(i,'barcode',x.barcode)}${cell(i,'patient',x.patient)}${cell(i,'age',x.age)}${cell(i,'sex',x.sex)}${cell(i,'test',x.test)}<td>${esc(urineRoutineParameterText(x.test))}</td></tr>`).join('')+'</tbody></table>';
+  $('preview').innerHTML='<table><thead><tr><th>Sr. No</th><th>Date</th><th>LAB No</th><th>Barcode</th><th>Patient Name</th><th>Age</th><th>Sex</th><th>Ref By</th><th>Test Name</th><th>RPT Parameters</th></tr></thead><tbody>'+r.map((x,i)=>`<tr><td>${i+1}</td>${cell(i,'date',x.date)}${cell(i,'labNo',x.labNo)}${cell(i,'barcode',x.barcode)}${cell(i,'patient',x.patient)}${cell(i,'age',x.age)}${cell(i,'sex',x.sex)}${cell(i,'refBy',x.refBy)}${cell(i,'test',x.test)}<td>${esc(urineRoutineParameterText(x.test))}</td></tr>`).join('')+'</tbody></table>';
   $('preview').querySelectorAll('[contenteditable]').forEach(td=>td.addEventListener('input',()=>{
     const i=+td.dataset.i,k=td.dataset.k,v=td.innerText.trim(); state.records[i][k]=v;
   }));
@@ -437,8 +479,8 @@ $('downloadPdf').addEventListener('click',()=>{
 
 $('downloadCsv').addEventListener('click',()=>{
   state.records=filterHiddenTests(state.records); if(!state.records.length){renderPreview();showStatus('No visible rows to export. X-ray tests are hidden automatically.','warn');return;} sortRecordsAscending(state.records); renderPreview();
-  const hdr=['Sr. No','Date','LAB No','Barcode','Patient Name','Age','Sex','Test Name','RPT Parameters'];
-  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"'; const rows=state.records.map((r,i)=>[i+1,r.date,r.labNo,r.barcode,r.patient,r.age,r.sex,r.test,urineRoutineParameterText(r.test)]);
+  const hdr=['Sr. No','Date','LAB No','Barcode','Patient Name','Age','Sex','Ref By','Test Name','RPT Parameters'];
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"'; const rows=state.records.map((r,i)=>[i+1,r.date,r.labNo,r.barcode,r.patient,r.age,r.sex,r.refBy,r.test,urineRoutineParameterText(r.test)]);
   const csv=[hdr,...rows].map(row=>row.map(q).join(',')).join('\r\n'); const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='RPT_Extracted_Data.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 });
 drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();file.click()}});
