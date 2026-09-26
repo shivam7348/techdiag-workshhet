@@ -398,7 +398,7 @@ function naturalCompare(a,b){
   }
   return 0;
 }
-function isBloodGroup(testName){return /bBLOODs*GROUP|bABOb/i.test(String(testName||''))}
+function isBloodGroup(testName){return /\bBLOOD\s*GROUP|\bABO\b/i.test(String(testName||''))}
 function sortRecordsAscending(rows){
   rows.sort((a,b)=>{
     // Serial order: LAB No ascending, then Barcode ascending.
