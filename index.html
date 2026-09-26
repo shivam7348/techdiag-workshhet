@@ -188,6 +188,7 @@ td[contenteditable=true]:focus{background:#fffbe8 !important;box-shadow:inset 0 
         <div class="grid">
           <div class="field"><label for="section">Section / Department</label><input id="section" value="CLINICAL PATHOLOGY" /></div>
           <div class="field"><label for="fixedHeading">Branch heading <span class="muted" style="font-weight:400">(optional)</span></label><input id="fixedHeading" placeholder="e.g. MIRA ROAD MAIN BRANCH" /><div class="hint">Shown above each patient block when filled in.</div></div>
+          <div class="field"><label for="pdfFont">PDF font size</label><select id="pdfFont"><option value="7">Small (7 pt)</option><option value="8.5" selected>Normal (8.5 pt)</option><option value="10">Large (10 pt)</option><option value="11.5">Extra large (11.5 pt)</option><option value="13">Huge (13 pt)</option></select><div class="hint">Text size in the downloaded RPT worksheet. Larger text uses more pages.</div></div>
         </div>
       </div>
     </div>
@@ -464,13 +465,19 @@ function groupPatients(rows){
   return out;
 }
 function split(doc,text,max){return doc.splitTextToSize(String(text||''),max)}
+const PDF_FONT_KEY='rptPdfFont';
+function getPdfFont(){const v=parseFloat($('pdfFont').value);return v>=6&&v<=16?v:8.5}
+try{const saved=localStorage.getItem(PDF_FONT_KEY);if(saved&&[...$('pdfFont').options].some(o=>o.value===saved))$('pdfFont').value=saved}catch(e){}
+$('pdfFont').addEventListener('change',()=>{try{localStorage.setItem(PDF_FONT_KEY,$('pdfFont').value)}catch(e){}});
 function getHeading(){return $('fixedHeading').value.trim();}
 function calcDateRange(rows){const ds=rows.map(r=>toDateObj(r.date)).filter(Boolean).sort((a,b)=>a-b);if(!ds.length)return {from:'',to:''};const f=ds[0],t=ds[ds.length-1];const render=d=>`${String(d.getDate()).padStart(2,'0')}-${mon[d.getMonth()]}-${d.getFullYear()}`;return{from:render(f),to:render(t)}}
 
 $('downloadPdf').addEventListener('click',()=>{
   state.records=filterHiddenTests(state.records); if(!state.records.length){renderPreview();showStatus('No visible rows to export. X-ray tests are hidden automatically.','warn');return;} sortRecordsAscending(state.records); renderPreview(); if(!window.jspdf){showStatus('PDF generator could not load. Please connect to the internet and reopen the converter.','err');return}
   const {jsPDF}=window.jspdf; const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'a4'}); const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
-  const left=20,right=W-20,bottom=28; const col={sr:left+4,date:left+32,lab:left+82,barcode:left+150,patient:left+222,test:left+382,params:left+512}; const width={patient:152,test:122,params:right-(left+512)}; const range=calcDateRange(state.records); const groups=groupPatients(state.records); let pageNo=1,y=0; const FS=8.5,LH=10.5; // worksheet body font size and line height
+  const left=20,right=W-20,bottom=28; const FS=getPdfFont(),LH=+(FS*1.24).toFixed(2),HG=Math.round(FS*1.9),k=FS/8.5; // body font size, line height, header-row gap
+  // Short fixed-content columns (Sr, Date, LAB No, Barcode) widen with the font; Patient/Test wrap, Parameters get the rest.
+  const cx=[4,28*k,50*k,68*k,72*k,160,130].reduce((a,w)=>(a.push(a[a.length-1]+w),a),[0]).slice(1); const col={sr:left+cx[0],date:left+cx[1],lab:left+cx[2],barcode:left+cx[3],patient:left+cx[4],test:left+cx[5],params:left+cx[6]}; const width={patient:152,test:122,params:right-col.params}; const range=calcDateRange(state.records); const groups=groupPatients(state.records); let pageNo=1,y=0;
   function header(first){doc.setLineWidth(1.1);doc.rect(left,14,right-left,42);doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('Work Sheet Report',W/2,31,{align:'center'});doc.setFontSize(9);doc.text(`From :- ${range.from} To :- ${range.to}`,W/2,45,{align:'center'});if(first){doc.setFontSize(9);doc.text(($('section').value||'').trim(),left+2,78);return 96}return 74}
   function addPage(){doc.addPage('a4','landscape');pageNo++;y=header(false)}
   y=header(true);
@@ -483,10 +490,10 @@ $('downloadPdf').addEventListener('click',()=>{
       paramLines:urineRoutineParameterText(t.name)?split(doc,urineRoutineParameterText(t.name),width.params):[]
     }));
     const testContentLines=Math.max(1,testRows.reduce((sum,row)=>sum+Math.max(1,row.testLines.length,row.paramLines.length),0));
-    const n=Math.max(1,patientLines.length,testContentLines);const blockH=46+(n-1)*LH;
+    const n=Math.max(1,patientLines.length,testContentLines);const blockH=HG+n*LH+21;
     if(y+blockH>H-bottom-12)addPage();
-    doc.setFont('helvetica','bold');doc.setFontSize(FS);doc.text('Sr.',col.sr,y);doc.text('Date',col.date,y);doc.text('LAB No',col.lab,y);doc.text('Barcode',col.barcode,y);doc.text('Patient Name',col.patient,y);doc.text('Test Name',col.test,y);y+=16;
-    const hd=getHeading(g);if(hd){doc.setFontSize(FS-0.2);doc.text(hd,left+2,y);y+=15}
+    doc.setFont('helvetica','bold');doc.setFontSize(FS);doc.text('Sr.',col.sr,y);doc.text('Date',col.date,y);doc.text('LAB No',col.lab,y);doc.text('Barcode',col.barcode,y);doc.text('Patient Name',col.patient,y);doc.text('Test Name',col.test,y);y+=HG;
+    const hd=getHeading(g);if(hd){doc.setFontSize(FS-0.2);doc.text(hd,left+2,y);y+=HG-1}
     doc.setFont('helvetica','normal');doc.setFontSize(FS);doc.text(String(sr),col.sr,y);doc.text(fmtShort(g.date),col.date,y);doc.text(g.labNo,col.lab,y);
     doc.setFont('helvetica','bold');patientLines.forEach((ln,i)=>doc.text(ln,col.patient,y+i*LH));
     doc.setFont('helvetica','normal');
@@ -496,7 +503,7 @@ $('downloadPdf').addEventListener('click',()=>{
       const rowH=Math.max(1,row.testLines.length,row.paramLines.length)*LH;
       // A patient with more tests than fit on one page continues on the next page instead of running off the bottom.
       if(ty+rowH>H-bottom-12){
-        addPage();doc.setFont('helvetica','bold');doc.setFontSize(FS);doc.text('Barcode',col.barcode,y);doc.text('Patient Name',col.patient,y);doc.text('Test Name',col.test,y);y+=16;
+        addPage();doc.setFont('helvetica','bold');doc.setFontSize(FS);doc.text('Barcode',col.barcode,y);doc.text('Patient Name',col.patient,y);doc.text('Test Name',col.test,y);y+=HG;
         doc.setFont('helvetica','normal');doc.text(g.labNo,col.lab,y);doc.setFont('helvetica','bold');doc.text(split(doc,g.patient+' (contd.)',width.patient)[0],col.patient,y);doc.setFont('helvetica','normal');
         ty=y;lastBarcode=null;
       }
