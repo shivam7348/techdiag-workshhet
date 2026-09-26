@@ -183,7 +183,7 @@ td[contenteditable=true]:focus{background:#fffbe8 !important;box-shadow:inset 0 
 
   <div class="stats">
     <div class="stat"><div class="stat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div><div><b id="sRecords">0</b><span>Worksheet rows</span></div></div>
-    <div class="stat"><div class="stat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><b id="sPatients">0</b><span>Unique patients</span></div></div>
+    <div class="stat"><div class="stat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div><b id="sPatients">0</b><span>Total patients</span></div></div>
     <div class="stat"><div class="stat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6L4.5 18.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-2.5L14 9V3"/><path d="M7 15h10"/></svg></div><div><b id="sTests">0</b><span>Unique tests</span></div></div>
     <div class="stat alt"><div class="stat-ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div><div><b id="sWarnings">0</b><span>Warnings</span></div></div>
   </div>
@@ -416,7 +416,7 @@ parseBtn.addEventListener('click',async()=>{
 
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function renderPreview(){
-  const r=state.records; $('sRecords').textContent=r.length; $('sPatients').textContent=new Set(r.map(x=>x.date+'|'+x.labNo+'|'+x.patient)).size; $('sTests').textContent=new Set(r.map(x=>x.test)).size; $('sWarnings').textContent=state.warnings.length;
+  const r=state.records; $('sRecords').textContent=r.length; $('sPatients').textContent=r.length+state.hiddenCount; $('sTests').textContent=new Set(r.map(x=>x.test)).size; $('sWarnings').textContent=state.warnings.length;
   $('downloadPdf').disabled=!r.length; $('downloadCsv').disabled=!r.length;
   if(!r.length){$('preview').className='preview-empty';$('preview').innerHTML='Upload a worksheet PDF to see the extracted rows.';return}
   $('preview').className='table-wrap';
