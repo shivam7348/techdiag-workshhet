@@ -398,11 +398,15 @@ function naturalCompare(a,b){
   }
   return 0;
 }
+function isBloodGroup(testName){return /bBLOODs*GROUP|bABOb/i.test(String(testName||''))}
 function sortRecordsAscending(rows){
   rows.sort((a,b)=>{
     // Serial order: LAB No ascending, then Barcode ascending.
     const lab=naturalCompare(a.labNo,b.labNo);
     if(lab) return lab;
+    // Within a patient, BLOOD GROUP is always listed first.
+    const bg=isBloodGroup(b.test)-isBloodGroup(a.test);
+    if(bg) return bg;
     const bc=naturalCompare(a.barcode,b.barcode);
     if(bc) return bc;
     const da=toDateObj(a.date), db=toDateObj(b.date);
