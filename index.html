@@ -159,7 +159,7 @@ td[contenteditable=true]:focus{background:#fffbe8 !important;box-shadow:inset 0 
     <h1>RPT Worksheet Converter</h1>
     <p>Convert a <b>Patient Wise Worksheet (Details)</b> PDF into a print-ready RPT <b>Work Sheet Report</b> in A4 landscape.</p>
     <div class="rules">
-      <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Serial order: LAB No → Barcode (ascending)</span>
+      <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Serial order: LAB No → Blood Group first → Barcode (ascending)</span>
       <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>X-ray tests hidden automatically</span>
       <span class="rule"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Urine Routine: Sp. Gravity → Pus Cells → Protein → Epithelial Cells</span>
     </div>
@@ -401,7 +401,7 @@ function naturalCompare(a,b){
 function isBloodGroup(testName){return /\bBLOOD\s*GROUP|\bABO\b/i.test(String(testName||''))}
 function sortRecordsAscending(rows){
   rows.sort((a,b)=>{
-    // Serial order: LAB No ascending, then Barcode ascending.
+    // Serial order: LAB No ascending, BLOOD GROUP first within a patient, then Barcode ascending.
     const lab=naturalCompare(a.labNo,b.labNo);
     if(lab) return lab;
     // Within a patient, BLOOD GROUP is always listed first.
